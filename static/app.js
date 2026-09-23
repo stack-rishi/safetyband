@@ -51,6 +51,264 @@ const ARCH_MAP = {
   19: { name: "Exit Gate 3",        code: "EXIT-03",     room: { x: 500, y: 416 }, door: { x: 500, y: 395 }, corr: { x: 500, y: 416 } }
 };
 
+// ── Built-in Client Dijkstra & Graph Engine (for 100% Static Deployment) ──
+const CLIENT_NODES = {
+  0:  { id: 0,  name: "Lab 2",               code: "CL2",     type: "Laboratory",  floor: 1, x: 190, y: 100 },
+  1:  { id: 1,  name: "Computer Lab 1",      code: "CL1",     type: "Laboratory",  floor: 1, x: 80,  y: 100 },
+  2:  { id: 2,  name: "Electronics Lab",     code: "EL",      type: "Laboratory",  floor: 1, x: 300, y: 100 },
+  3:  { id: 3,  name: "Lecture Hall 101",    code: "LH101",   type: "Classroom",   floor: 1, x: 620, y: 100 },
+  4:  { id: 4,  name: "Lecture Hall 102",    code: "LH102",   type: "Classroom",   floor: 1, x: 710, y: 100 },
+  5:  { id: 5,  name: "Corridor A",          code: "CORR_A",  type: "Corridor",    floor: 1, x: 380, y: 100 },
+  6:  { id: 6,  name: "Corridor B",          code: "CORR_B",  type: "Corridor",    floor: 1, x: 190, y: 190 },
+  7:  { id: 7,  name: "Corridor C",          code: "CORR_C",  type: "Corridor",    floor: 1, x: 480, y: 150 },
+  8:  { id: 8,  name: "Staircase 1",         code: "STAIR_1", type: "Staircase",   floor: 1, x: 560, y: 210 },
+  9:  { id: 9,  name: "Staircase 2",         code: "STAIR_2", type: "Staircase",   floor: 1, x: 190, y: 270 },
+  10: { id: 10, name: "Fire Escape Stair",  code: "F_STAIR", type: "Staircase",   floor: 1, x: 380, y: 40  },
+  11: { id: 11, name: "Physics Lab",        code: "PL",      type: "Laboratory",  floor: 0, x: 100, y: 410 },
+  12: { id: 12, name: "Chemistry Lab",      code: "CHEM",    type: "Laboratory",  floor: 0, x: 240, y: 410 },
+  13: { id: 13, name: "Seminar Hall",       code: "SEM",     type: "Classroom",   floor: 0, x: 680, y: 410 },
+  14: { id: 14, name: "Library",            code: "LIB",     type: "Classroom",   floor: 0, x: 680, y: 310 },
+  15: { id: 15, name: "Main Hall",          code: "M_HALL",  type: "Hall",        floor: 0, x: 560, y: 330 },
+  16: { id: 16, name: "Ground West Corr",   code: "GW_CORR", type: "Corridor",    floor: 0, x: 190, y: 350 },
+  17: { id: 17, name: "Exit Gate 1",        code: "EXIT_1",  type: "Emergency Exit", floor: 0, x: 380, y: 15  },
+  18: { id: 18, name: "Exit Gate 2",        code: "EXIT_2",  type: "Emergency Exit", floor: 0, x: 50,  y: 350 },
+  19: { id: 19, name: "Exit Gate 3",        code: "EXIT_3",  type: "Emergency Exit", floor: 0, x: 750, y: 330 }
+};
+
+const CLIENT_EDGES = [
+  [0, 7, 3, "Lab 2 East door to Corridor C"],
+  [7, 8, 4, "Corridor C to Staircase 1 East Wing"],
+  [8, 15, 5, "Staircase 1 down to Ground Main Hall"],
+  [15, 19, 4, "Main Hall to Exit Gate 3"],
+  [0, 6, 3, "Lab 2 South door to Corridor B"],
+  [6, 9, 4, "Corridor B to Staircase 2 West Wing"],
+  [9, 19, 5, "Staircase 2 Ground Direct to Exit 3"],
+  [9, 16, 2, "Staircase 2 Ground Landing to West Corridor"],
+  [16, 18, 3, "Ground West Corridor to Exit Gate 2"],
+  [0, 5, 4, "Lab 2 North door to Corridor A"],
+  [5, 8, 4, "Corridor A Direct Connector to Staircase 1"],
+  [5, 7, 3, "Corridor A cross passage to Corridor C"],
+  [5, 10, 4, "Corridor A to Fire Escape Stair"],
+  [10, 17, 5, "Fire Escape down to Exit Gate 1 (North)"],
+  [1, 6, 3, "Computer Lab 1 to Corridor B"],
+  [2, 5, 2, "Electronics Lab to Corridor A"],
+  [3, 7, 3, "Lecture Hall 101 to Corridor C"],
+  [4, 7, 3, "Lecture Hall 102 to Corridor C"],
+  [4, 8, 3, "Lecture Hall 102 to Staircase 1"],
+  [11, 16, 3, "Physics Lab to Ground West Corridor"],
+  [12, 15, 4, "Chemistry Lab to Main Hall"],
+  [13, 15, 3, "Seminar Hall to Main Hall"],
+  [14, 15, 3, "Library to Main Hall"]
+];
+
+function getClientBuilding() {
+  return {
+    name: "College Science & Tech Block",
+    total_nodes: 20,
+    total_edges: CLIENT_EDGES.length,
+    nodes: Object.values(CLIENT_NODES),
+    edges: CLIENT_EDGES.map(([u, v, cost, desc]) => ({
+      source: u,
+      target: v,
+      base_cost: cost,
+      hazard: 1,
+      hazard_name: "Normal Route",
+      description: desc
+    }))
+  };
+}
+
+function parseHazardMultiplier(val) {
+  if (val === undefined || val === null) return 1;
+  if (typeof val === "number") return val;
+  const s = String(val).trim().toUpperCase();
+  if (["BLOCKED", "INF", "INFINITY", "FIRE", "CLOSED"].includes(s)) return Infinity;
+  if (["HAZARDOUS", "HAZARD", "SMOKE", "10"].includes(s)) return 10;
+  if (["NARROW", "5"].includes(s)) return 5;
+  if (["CROWDED", "CROWD", "3"].includes(s)) return 3;
+  if (["NORMAL", "CLEAR", "OPEN", "1"].includes(s)) return 1;
+  const n = parseFloat(s);
+  return isNaN(n) ? 1 : n;
+}
+
+function generateStepInstructions(pathNodes) {
+  const instructions = [];
+  for (let i = 0; i < pathNodes.length; i++) {
+    const curr = pathNodes[i];
+    if (i === 0) {
+      instructions.push(`START at ${curr.name} (Floor ${curr.floor})`);
+    } else {
+      const prev = pathNodes[i - 1];
+      if (curr.type === "Emergency Exit") {
+        instructions.push(`EVACUATE safely through ${curr.name}`);
+      } else if (curr.type === "Staircase" && prev.floor !== curr.floor) {
+        instructions.push(`Take ${curr.name} down from Floor ${prev.floor} to Floor ${curr.floor}`);
+      } else if (prev.type === "Staircase" && prev.floor !== curr.floor) {
+        instructions.push(`Descend stairs to Floor ${curr.floor}, entering ${curr.name}`);
+      } else {
+        instructions.push(`Proceed along ${curr.name}`);
+      }
+    }
+  }
+  return instructions;
+}
+
+function solveDijkstraClient(startId, destIdOrAuto, hazardMap = {}) {
+  const adj = {};
+  for (const nid in CLIENT_NODES) adj[nid] = [];
+  for (const [u, v, cost, desc] of CLIENT_EDGES) {
+    adj[u].push({ target: v, baseCost: cost, desc });
+    adj[v].push({ target: u, baseCost: cost, desc });
+  }
+
+  const nodeHazards = {};
+  for (const nid in CLIENT_NODES) {
+    nodeHazards[nid] = parseHazardMultiplier(hazardMap[nid]);
+  }
+
+  const dist = {};
+  const parent = {};
+  const visited = new Set();
+  for (const nid in CLIENT_NODES) {
+    dist[nid] = Infinity;
+    parent[nid] = null;
+  }
+
+  if (nodeHazards[startId] === Infinity) {
+    return {
+      route_found: false,
+      start_id: startId,
+      start_name: CLIENT_NODES[startId] ? CLIENT_NODES[startId].name : "Unknown",
+      destination_id: -1,
+      destination_name: "None",
+      total_cost: 999999,
+      status: "START LOCATION BLOCKED",
+      is_auto_selected: destIdOrAuto === null || destIdOrAuto === "auto" || destIdOrAuto === undefined,
+      exit_evaluations: [],
+      node_count: 0,
+      path: []
+    };
+  }
+
+  dist[startId] = 0;
+
+  while (true) {
+    let u = null;
+    let minDist = Infinity;
+    for (const nid in CLIENT_NODES) {
+      if (!visited.has(nid) && dist[nid] < minDist) {
+        minDist = dist[nid];
+        u = parseInt(nid);
+      }
+    }
+
+    if (u === null || minDist === Infinity) break;
+    visited.add(String(u));
+
+    for (const edge of adj[u]) {
+      const v = edge.target;
+      const vHaz = nodeHazards[v];
+      if (vHaz === Infinity) continue;
+      const weight = edge.baseCost * Math.max(1, vHaz);
+      if (dist[u] + weight < dist[v]) {
+        dist[v] = dist[u] + weight;
+        parent[v] = u;
+      }
+    }
+  }
+
+  const exits = [17, 18, 19];
+  const exitEvals = exits.map(eid => {
+    const c = dist[eid];
+    return {
+      id: eid,
+      name: CLIENT_NODES[eid].name,
+      code: CLIENT_NODES[eid].code,
+      cost: c === Infinity ? 999999 : c,
+      is_blocked: c === Infinity,
+      status: c === Infinity ? "BLOCKED" : "AVAILABLE"
+    };
+  }).sort((a, b) => a.cost - b.cost);
+
+  const isAuto = destIdOrAuto === null || destIdOrAuto === "auto" || destIdOrAuto === undefined;
+  let targetExit = null;
+  if (isAuto) {
+    targetExit = exitEvals[0].cost < 999999 ? exitEvals[0].id : null;
+  } else {
+    targetExit = parseInt(destIdOrAuto);
+  }
+
+  if (targetExit !== null) {
+    for (const ev of exitEvals) {
+      if (ev.id === targetExit) {
+        ev.status = isAuto ? "OPTIMAL_SELECTED" : "MANUAL_TARGET";
+      }
+    }
+  }
+
+  if (!targetExit || dist[targetExit] === Infinity) {
+    return {
+      route_found: false,
+      start_id: startId,
+      start_name: CLIENT_NODES[startId].name,
+      destination_id: targetExit || -1,
+      destination_name: targetExit ? CLIENT_NODES[targetExit].name : "None",
+      total_cost: 999999,
+      status: "NO SAFE ROUTE FOUND",
+      is_auto_selected: isAuto,
+      exit_evaluations: exitEvals,
+      node_count: 0,
+      path: []
+    };
+  }
+
+  const pathIds = [];
+  let curr = targetExit;
+  while (curr !== null) {
+    pathIds.unshift(curr);
+    curr = parent[curr];
+  }
+
+  const pathNodes = pathIds.map(nid => CLIENT_NODES[nid]);
+  const instructions = generateStepInstructions(pathNodes);
+
+  const path = pathIds.map((nid, i) => {
+    let stepCost = 0;
+    if (i > 0) {
+      const u = pathIds[i - 1];
+      const edge = adj[u].find(e => e.target === nid);
+      if (edge) {
+        stepCost = edge.baseCost * Math.max(1, nodeHazards[nid]);
+      }
+    }
+    return {
+      id: nid,
+      name: CLIENT_NODES[nid].name,
+      code: CLIENT_NODES[nid].code,
+      type: CLIENT_NODES[nid].type,
+      floor: CLIENT_NODES[nid].floor,
+      x: CLIENT_NODES[nid].x,
+      y: CLIENT_NODES[nid].y,
+      step_cost: stepCost,
+      instruction: instructions[i] || ""
+    };
+  });
+
+  return {
+    route_found: true,
+    start_id: startId,
+    start_name: CLIENT_NODES[startId].name,
+    destination_id: targetExit,
+    destination_name: CLIENT_NODES[targetExit].name,
+    total_cost: dist[targetExit],
+    status: "SAFE ROUTE FOUND",
+    is_auto_selected: isAuto,
+    exit_evaluations: exitEvals,
+    node_count: path.length,
+    path
+  };
+}
+
 // ── Initialization ─────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
   await loadBuilding();
@@ -62,10 +320,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadBuilding() {
   try {
-    building = await (await fetch("/api/building")).json();
+    const res = await fetch("/api/building");
+    if (res.ok) {
+      building = await res.json();
+      return;
+    }
   } catch (e) {
-    console.error("Failed to load building data", e);
+    // Static hosting fallback
   }
+  building = getClientBuilding();
 }
 
 // ── Dropdown Selects ────────────────────────────────────
@@ -116,7 +379,7 @@ function readHazardControls() {
   if (hzHall   && hzHall.value !== "NORMAL")   hazards[15] = hzHall.value;
 }
 
-// ── Route Calculation via Python API ───────────────────
+// ── Route Calculation via API with Local Engine Fallback ───
 async function go() {
   readHazardControls();
   const startId = parseInt(selStart.value);
@@ -134,27 +397,32 @@ async function go() {
   };
 
   try {
-    route = await (await fetch("/api/route", {
+    const res = await fetch("/api/route", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
-    })).json();
-
-    if ($("eng-status")) {
-      $("eng-status").textContent = route.route_found ? "\u2713 OPTIMAL FOUND" : "\u2716 NO SAFE PATH";
-      $("eng-status").className = `eng-v ${route.route_found ? "status-ok" : "status-err"}`;
+    });
+    if (res.ok) {
+      route = await res.json();
+    } else {
+      route = solveDijkstraClient(startId, destId, hazards);
     }
-
-    if ($("eng-nodes")) {
-      const count = route.path ? Math.max(16, 15 + route.path.length) : 20;
-      $("eng-nodes").textContent = `${Math.min(20, count)} / 20`;
-    }
-
-    renderFloorPlan();
-    updateRightPanel();
   } catch (err) {
-    console.error("Route calculation error:", err);
+    route = solveDijkstraClient(startId, destId, hazards);
   }
+
+  if ($("eng-status")) {
+    $("eng-status").textContent = route.route_found ? "\u2713 OPTIMAL FOUND" : "\u2716 NO SAFE PATH";
+    $("eng-status").className = `eng-v ${route.route_found ? "status-ok" : "status-err"}`;
+  }
+
+  if ($("eng-nodes")) {
+    const count = route.path ? Math.max(16, 15 + route.path.length) : 20;
+    $("eng-nodes").textContent = `${Math.min(20, count)} / 20`;
+  }
+
+  renderFloorPlan();
+  updateRightPanel();
 }
 
 // ── SVG Helpers ─────────────────────────────────────────

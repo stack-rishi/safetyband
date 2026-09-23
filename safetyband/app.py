@@ -182,3 +182,6 @@ def serve_favicon():
 def serve_index():
     return FileResponse("static/index.html")
 
+
+app.mount("/", StaticFiles(directory="static", html=True), name="root_static")
+
