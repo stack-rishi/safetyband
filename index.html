@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafetyBand — Emergency Evacuation Blueprint</title>
+  <meta name="description" content="SafetyBand interactive architectural emergency evacuation blueprint and Dijkstra shortest-path navigation engine.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Typography: Inter for all UI text, Caveat for small decorative annotations only -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="blueprint-canvas">
+
+  <!-- ==============================================================
+       MAIN ARCHITECTURAL SHEET CONTAINER
+       ============================================================== -->
+  <div class="sheet-container">
+
+    <!-- ── TOP HEADER: ENGINEERING DOCUMENT METADATA BLOCK ─────── -->
+    <header class="blueprint-header">
+      <div class="header-left">
+        <svg class="brand-shield" width="40" height="40" viewBox="0 0 48 48" fill="none">
+          <path d="M24 4L39 10V22C39 31.5 32.5 39.5 24 43C15.5 39.5 9 31.5 9 22V10L24 4Z" 
+                stroke="#1c1c1c" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+          <path d="M24 7L36 12V21C36 29 30.5 36 24 39C17.5 36 12 29 12 21V12L24 7Z" 
+                stroke="#1c1c1c" stroke-width="1.2" stroke-linejoin="round" fill="#e7e2d6"/>
+          <line x1="16" y1="16" x2="32" y2="32" stroke="#1c1c1c" stroke-width="1.2"/>
+          <line x1="20" y1="14" x2="34" y2="28" stroke="#1c1c1c" stroke-width="1.2"/>
+          <line x1="14" y1="20" x2="28" y2="34" stroke="#1c1c1c" stroke-width="1.2"/>
+          <line x1="18" y1="12" x2="30" y2="24" stroke="#1c1c1c" stroke-width="1.2"/>
+        </svg>
+
+        <div class="brand-titles">
+          <div class="title-row">
+            <h1 class="brand-name">SAFETYBAND</h1>
+            <span class="doc-code">DOC: SB-EVAC-01 // REV 4</span>
+          </div>
+          <span class="brand-sub">EMERGENCY EVACUATION SYSTEM &bull; FACILITY PATHFINDER</span>
+        </div>
+      </div>
+
+      <!-- Engineering Document Metadata Grid -->
+      <div class="header-meta-grid">
+        <div class="meta-cell">
+          <span class="meta-label">FACILITY</span>
+          <span class="meta-val">ACADEMIC WING</span>
+        </div>
+        <div class="meta-cell">
+          <span class="meta-label">LEVEL</span>
+          <span class="meta-val">FLOOR 01</span>
+        </div>
+        <div class="meta-cell">
+          <span class="meta-label">DISPATCH SYSTEM</span>
+          <span class="meta-val status-val"><span class="status-dot"></span>OPERATIONAL</span>
+        </div>
+        <div class="meta-cell">
+          <span class="meta-label">ROUTE ENGINE</span>
+          <span class="meta-val">DIJKSTRA V1.0</span>
+        </div>
+        <div class="meta-cell">
+          <span class="meta-label">LAST SENSOR SYNC</span>
+          <span class="meta-val" id="clock-time">00:00:00</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── 3-COLUMN WORKSPACE ──────────────────────────────────── -->
+    <div class="blueprint-body">
+
+      <!-- ── LEFT COLUMN: ENGINEERING CONTROL SHEET ─────────────── -->
+      <aside class="col-left">
+
+        <!-- 01: Evacuation Query -->
+        <div class="ctrl-block">
+          <div class="block-header">
+            <span class="block-num">01</span>
+            <div class="block-titles">
+              <span class="block-title">EVACUATION QUERY</span>
+              <span class="block-sub">SPECIFY ORIGIN &bull; TARGET EXIT</span>
+            </div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-label" for="sel-start">
+              <span>CURRENT LOCATION</span>
+              <span class="tag-label">[ORIGIN]</span>
+            </label>
+            <div class="select-container">
+              <svg class="select-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="2">
+                <circle cx="12" cy="12" r="8"/>
+                <circle cx="12" cy="12" r="3" fill="#2563eb"/>
+              </svg>
+              <select class="eng-select" id="sel-start">
+                <option value="0" selected>Lab 2 (Room F1-204)</option>
+                <option value="1">Computer Lab 1 (Room F1-201)</option>
+                <option value="2">Electronics Lab (Room F1-208)</option>
+                <option value="3">Lecture Hall 101 (Room F1-301)</option>
+                <option value="4">Lecture Hall 102 (Room F1-305)</option>
+                <option value="11">Physics Lab (PL-01)</option>
+                <option value="12">Chemistry Lab (CHEM-F1-110)</option>
+                <option value="14">Library (LIB-01)</option>
+                <option value="13">Seminar Hall (AUD-01)</option>
+                <option value="15">Main Hall (Atrium Level 0)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-label" for="sel-dest">
+              <span>TARGET DESTINATION</span>
+              <span class="tag-label">[EXIT POINT]</span>
+            </label>
+            <div class="select-container">
+              <svg class="select-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#169b62" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <path d="M12 8l4 4-4 4M8 12h8"/>
+              </svg>
+              <select class="eng-select" id="sel-dest">
+                <option value="auto" selected>&#9733; AUTO: Safest Nearest Exit (Dijkstra Optimized)</option>
+                <option value="19">Exit Gate 3 (Main East Atrium)</option>
+                <option value="17">Exit Gate 1 (North Fire Stairs)</option>
+                <option value="18">Exit Gate 2 (West Wing Ground)</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="compute-btn" id="btn-go">
+            <span class="btn-icon">&#10132;</span>
+            <span class="btn-text">COMPUTE SAFEST ROUTE</span>
+          </button>
+        </div>
+
+        <div class="divider-line"></div>
+
+        <!-- 02: Field Conditions & Sensor Overrides -->
+        <div class="ctrl-block">
+          <div class="block-header">
+            <span class="block-num">02</span>
+            <div class="block-titles">
+              <span class="block-title">FIELD SENSOR CONDITIONS</span>
+              <span class="block-sub">SIMULATE OR OVERRIDE HAZARDS</span>
+            </div>
+          </div>
+
+          <div class="conditions-table">
+            <div class="cond-row" id="row-stair2">
+              <div class="cond-name-col">
+                <span class="cond-name">Staircase 2</span>
+                <span class="cond-code">STAIR-F1-02</span>
+              </div>
+              <select class="cond-select" id="hz-stair2">
+                <option value="NORMAL">&bull; NORMAL</option>
+                <option value="BLOCKED" selected>&#9632; BLOCKED</option>
+              </select>
+            </div>
+
+            <div class="cond-row" id="row-corrc">
+              <div class="cond-name-col">
+                <span class="cond-name">Corridor C</span>
+                <span class="cond-code">CORR-C-VERT</span>
+              </div>
+              <select class="cond-select" id="hz-corrc">
+                <option value="NORMAL">&bull; NORMAL</option>
+                <option value="HAZARDOUS">&#9650; WARNING</option>
+                <option value="BLOCKED">&#9632; BLOCKED</option>
+              </select>
+            </div>
+
+            <div class="cond-row" id="row-lab1">
+              <div class="cond-name-col">
+                <span class="cond-name">Computer Lab 1</span>
+                <span class="cond-code">ROOM-F1-201</span>
+              </div>
+              <select class="cond-select" id="hz-lab1">
+                <option value="NORMAL">&bull; NORMAL</option>
+                <option value="CROWDED">&#9650; CROWDED</option>
+                <option value="BLOCKED">&#9632; BLOCKED</option>
+              </select>
+            </div>
+
+            <div class="cond-row" id="row-hall">
+              <div class="cond-name-col">
+                <span class="cond-name">Main Hall</span>
+                <span class="cond-code">ATRIUM-LVL0</span>
+              </div>
+              <select class="cond-select" id="hz-hall">
+                <option value="NORMAL">&bull; NORMAL</option>
+                <option value="HAZARDOUS">&#9650; SMOKE</option>
+                <option value="BLOCKED">&#9632; BLOCKED</option>
+              </select>
+            </div>
+          </div>
+          <span class="field-hint">Dynamic Dijkstra recalculates automatically when hazards shift.</span>
+        </div>
+
+        <div class="divider-line"></div>
+
+        <!-- 03: DAA Route Engine Metadata Block -->
+        <div class="ctrl-block engine-block">
+          <div class="block-header">
+            <span class="block-num">03</span>
+            <div class="block-titles">
+              <span class="block-title">ALGORITHM ENGINE STATUS</span>
+              <span class="block-sub">DIJKSTRA MIN-HEAP DISPATCH</span>
+            </div>
+          </div>
+
+          <div class="engine-data-grid">
+            <div class="eng-item">
+              <span class="eng-k">NODES EVALUATED</span>
+              <span class="eng-v" id="eng-nodes">20 / 20</span>
+            </div>
+            <div class="eng-item">
+              <span class="eng-k">GRAPH EDGES</span>
+              <span class="eng-v">34 Active</span>
+            </div>
+            <div class="eng-item">
+              <span class="eng-k">COMPLEXITY</span>
+              <span class="eng-v">O(E + V log V)</span>
+            </div>
+            <div class="eng-item">
+              <span class="eng-k">PATH STATE</span>
+              <span class="eng-v status-ok" id="eng-status">&#10003; OPTIMAL FOUND</span>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ── CENTER COLUMN: HERO ARCHITECTURAL EVACUATION BLUEPRINT ─ -->
+      <main class="col-center">
+        <div class="map-frame">
+
+          <!-- Architectural Sheet Header Bar -->
+          <div class="map-top-bar">
+            <div class="map-titles">
+              <div class="map-title-row">
+                <h2 class="map-title">EVACUATION BLUEPRINT &bull; LEVEL 01 (ACADEMIC WING)</h2>
+                <span class="map-tag">SCALE 1 : 250</span>
+                <span class="map-tag">GRID 10m</span>
+              </div>
+              <div class="map-tech-sub">BUILDING 01 &bull; ZONE A &bull; FIRE RESISTANCE RATING: 120 MIN &bull; PLAN REV 04</div>
+            </div>
+
+            <!-- North Compass Indicator -->
+            <div class="compass-box">
+              <span class="compass-n">N</span>
+              <svg class="compass-svg" width="16" height="26" viewBox="0 0 16 26" fill="none">
+                <polygon points="8,0 15,14 9,14 9,26 7,26 7,14 1,14" fill="#1c1c1c"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Interactive SVG Architectural Floor Plan Canvas -->
+          <div class="svg-container" id="map-viewport">
+            <svg id="svg" viewBox="0 0 780 470" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <!-- Red pencil hatch pattern for blocked hazard zones -->
+                <pattern id="hatch-blocked" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                  <line x1="0" y1="0" x2="0" y2="8" stroke="#dc2626" stroke-width="1.8"/>
+                </pattern>
+
+                <!-- Subtle architectural room tile grid -->
+                <pattern id="arch-grid" width="16" height="16" patternUnits="userSpaceOnUse">
+                  <path d="M 16 0 L 0 0 0 16" fill="none" stroke="rgba(28,28,28,0.04)" stroke-width="0.8"/>
+                </pattern>
+
+                <!-- Marker glow for safe route -->
+                <filter id="route-ink-blur" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1.2" result="blur"/>
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Layer 0: Faint Technical Construction Guidelines -->
+              <g id="g-construction-lines"></g>
+
+              <!-- Layer 1: Architectural Rooms, Partitions, Walls & Doorways -->
+              <g id="g-floorplan"></g>
+
+              <!-- Layer 2: Dimensional Measurements & Reference Room Codes -->
+              <g id="g-dimensions"></g>
+
+              <!-- Layer 3: Recommended Dijkstra Route (Hand-Highlighted Blue Marker) -->
+              <g id="g-route"></g>
+
+              <!-- Layer 4: Hazard Overlays (Red Cross-Hatch & Warning Stamps) -->
+              <g id="g-hazards"></g>
+
+              <!-- Layer 5: Interactive Pin & Human Annotations -->
+              <g id="g-annotations"></g>
+            </svg>
+
+            <!-- Floating Room Inspection Tooltip -->
+            <div class="room-inspect-tooltip" id="map-tooltip"></div>
+          </div>
+
+          <!-- Architectural Legend Bar -->
+          <div class="map-legend">
+            <div class="legend-items">
+              <div class="leg-item">
+                <span class="leg-swatch leg-route"></span>
+                <span>Recommended Route</span>
+              </div>
+              <div class="leg-item">
+                <span class="leg-swatch leg-room"></span>
+                <span>Room / Lab</span>
+              </div>
+              <div class="leg-item">
+                <span class="leg-swatch leg-stair">&#9638;</span>
+                <span>Staircase</span>
+              </div>
+              <div class="leg-item">
+                <span class="leg-swatch leg-exit">EXIT</span>
+                <span>Emergency Exit</span>
+              </div>
+              <div class="leg-item">
+                <span class="leg-swatch leg-hazard">&#10005;</span>
+                <span>Hazard / Blocked</span>
+              </div>
+            </div>
+
+            <div class="legend-right-note">
+              <span class="hand-slogan-small">&ldquo;Every second counts.&rdquo;</span>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- ── RIGHT COLUMN: ROUTE INFORMATION & WAYPOINT MANIFEST ─── -->
+      <aside class="col-right">
+
+        <!-- Route Status Banner -->
+        <div class="route-banner" id="route-banner">
+          <div class="banner-left">
+            <span class="banner-check" id="banner-check">&#10003;</span>
+            <span class="banner-title" id="banner-text">ROUTE COMPUTED</span>
+          </div>
+          <span class="banner-tag" id="banner-tag">MIN-COST OPTIMAL</span>
+        </div>
+
+        <!-- From - To Summary -->
+        <div class="route-terminals">
+          <div class="terminal-item">
+            <span class="term-lbl">ORIGIN:</span>
+            <span class="term-val" id="term-origin">Lab 2</span>
+          </div>
+          <div class="term-arrow">&rarr;</div>
+          <div class="terminal-item">
+            <div class="dest-label-row">
+              <span class="term-lbl">DESTINATION:</span>
+              <span class="dest-mode-badge" id="dest-mode-badge">AUTO-OPTIMIZED</span>
+            </div>
+            <span class="term-val val-exit" id="term-dest">Exit Gate 3</span>
+          </div>
+        </div>
+
+        <!-- Technical Metrics Grid -->
+        <div class="route-metrics-grid">
+          <div class="metric-box">
+            <span class="metric-val" id="metric-dist">84 m</span>
+            <span class="metric-lbl">EST. DISTANCE</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-val" id="metric-time">1:12 min</span>
+            <span class="metric-lbl">EST. EVAC TIME</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-val" id="metric-cost">17</span>
+            <span class="metric-lbl">DIJKSTRA COST</span>
+          </div>
+        </div>
+
+        <!-- Route Reliability / Confidence Gauge -->
+        <div class="confidence-bar-wrap">
+          <div class="confidence-header">
+            <span class="conf-lbl">ROUTE PASSAGE RATING</span>
+            <span class="conf-val" id="conf-val">94% CLEAR</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="conf-fill" style="width: 94%;"></div>
+          </div>
+        </div>
+
+        <!-- Real-Time Exit Gate Readiness Matrix -->
+        <div class="exit-matrix-block">
+          <div class="matrix-header">
+            <span class="matrix-title">ALL EXITS EVALUATED BY DIJKSTRA</span>
+            <span class="matrix-sub">REAL-TIME RISK &bull; COST COMPARISON</span>
+          </div>
+          <div class="exit-matrix-list" id="exit-matrix-list"></div>
+        </div>
+
+        <div class="divider-line"></div>
+
+        <!-- Waypoint Timeline Manifest -->
+        <div class="timeline-header">
+          <span class="tl-title">EVACUATION STEP DIRECTIVES</span>
+          <span class="tl-count" id="tl-step-count">5 WAYPOINTS</span>
+        </div>
+
+        <div class="timeline-scroll-wrap">
+          <ol class="route-timeline" id="route-timeline"></ol>
+        </div>
+
+        <div class="divider-line"></div>
+
+        <!-- Technical Safety Advisory Memo -->
+        <div class="advisory-memo">
+          <div class="memo-title-row">
+            <span class="memo-badge">ADVISORY</span>
+            <span class="memo-code">PROTOCOL IS-2189</span>
+          </div>
+          <p class="memo-text" id="memo-text">
+            Proceed via Corridor A through Staircase 1. Maintain brisk walking pace. Do not use elevators.
+          </p>
+        </div>
+
+        <!-- Right Footer Stamp -->
+        <div class="col-right-footer">
+          <span class="footer-eng-brand">SAFETYBAND FACILITY PATHFINDER</span>
+          <span class="footer-eng-sub">CERTIFIED FOR DRILLS &bull; LEVEL 01</span>
+        </div>
+
+      </aside>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
