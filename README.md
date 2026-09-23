@@ -3,16 +3,16 @@
 # 🛡️ SAFETYBAND
 ### Dynamic Emergency Evacuation Path Optimizer
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-success?style=flat-square&logo=githubpages&logoColor=white)](https://stack-rishi.github.io/safetyband/)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-safetyband--app.vercel.app-000000?style=flat-square&logo=vercel&logoColor=white)](https://safetyband-app.vercel.app)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Mirror-success?style=flat-square&logo=githubpages&logoColor=white)](https://stack-rishi.github.io/safetyband/)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-Passing-success?style=flat-square&logo=checkmarx&logoColor=white)]()
-[![Status](https://img.shields.io/badge/Status-Operational-169b62?style=flat-square)]()
 
 **Real-time, hazard-weighted campus pathfinding engine powered by Dijkstra's Algorithm and rendered on an interactive architectural blueprint console.**
 
-[🌐 Launch Live Blueprint Demo](https://stack-rishi.github.io/safetyband/) • [Key Features](#-key-features) • [Algorithmic Engine](#-algorithmic-engine) • [Architecture](#-architecture) • [Building Topology](#-building-topology) • [Quickstart](#-quickstart) • [API Reference](#-api-reference)
+[🌐 Launch Live Vercel App](https://safetyband-app.vercel.app) • [GitHub Pages Mirror](https://stack-rishi.github.io/safetyband/) • [Key Features](#-key-features) • [Algorithmic Engine](#-algorithmic-engine) • [Architecture](#-architecture) • [Building Topology](#-building-topology) • [Quickstart](#-quickstart) • [API Reference](#-api-reference)
 
 ---
 
